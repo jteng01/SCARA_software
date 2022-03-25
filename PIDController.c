@@ -1,4 +1,4 @@
-struct PID {
+typedef struct PID{
   //gains
   float ki;
   float kp;
@@ -24,6 +24,7 @@ struct PID {
   //output
   float out;
 };
+typedef struct PID PID;
 
 void PID_init(PID *pid, float ISRfreq) {
   pid->ISRfreq = ISRfreq;
@@ -53,5 +54,9 @@ void PID_calculate(PID *pid, float measurement, float desired){
 
   pid->prevError = pid->currentError;
   pid->prevMeasure = measurement;
+}
+
+ISR(TIMER1_COMPA_vect) {
+
 }
 
