@@ -142,7 +142,7 @@
     <ClCompile Include="..\..\KinematicsAndPathing.c" />
     <ClCompile Include="..\..\Main.c" />
     <ClCompile Include="..\..\PIDController.c" />
-    <ClCompile Include="..\..\PIDMotorConnection.c" />
+    <ClCompile Include="..\..\SensorLogic.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

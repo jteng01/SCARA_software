@@ -56,7 +56,4 @@ void PID_calculate(PID *pid, float measurement, float desired){
   pid->prevMeasure = measurement;
 }
 
-ISR(TIMER1_COMPA_vect) {
-
-}
 
