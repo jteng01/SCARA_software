@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\KinematicsAndPathing.c">
+    <ClCompile Include="..\..\Kinematics.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Main.c">
@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\PIDController.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\SensorLogic.c">
+    <ClCompile Include="..\..\PathPlanning.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

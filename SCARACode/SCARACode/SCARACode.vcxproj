@@ -139,10 +139,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\KinematicsAndPathing.c" />
+    <ClCompile Include="..\..\Kinematics.c" />
     <ClCompile Include="..\..\Main.c" />
     <ClCompile Include="..\..\PIDController.c" />
-    <ClCompile Include="..\..\SensorLogic.c" />
+    <ClCompile Include="..\..\PathPlanning.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
