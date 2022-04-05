@@ -14,7 +14,7 @@ typedef struct SCARAArm SCARAArm;
 
 
 /*
-InitializeArm
+initializeArm
 
 Inputs:
 struct SCARAArm* arm
@@ -23,7 +23,7 @@ float length
 Purpose:function to modify the gains of the PID values
 
 */
-void InitializeArm(SCARAArm* arm, float length) {
+void initializeArm(SCARAArm* arm, float length) {
     arm->length = length;
     arm->armVector[0] = length;
     arm->armVector[1] = 0;
@@ -32,7 +32,7 @@ void InitializeArm(SCARAArm* arm, float length) {
 }
 
 /*
-RotateVector
+rotateVector
 
 Inputs: 
 float theta
@@ -41,13 +41,13 @@ float posvec[] SIZE 2
 Purpose: Rotates the arm to a desired angle counter clockwise
 
 */
-void RotateVector(float theta, float posvec[]){
+void rotateVector(float theta, float posvec[]){
     posvec[0] = cos(theta)*posvec[0] - sin(theta)*posvec[0];
     posvec[1] = sin(theta)*posvec[1] + cos(theta)*posvec[1];
 }
 
 /*
-PositionToAngle
+positionToAngle
 Inputs:
 SCARAArm lowArm
 SCARAArm upArm
@@ -57,7 +57,7 @@ float ypos
 purpose: find the desired angles required to move the arms to the desired position,
 the c code implements the function PostoAngle.m written in matlab
 */
-void PositionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) {
+void positionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) {
     
     //set l3 as the length of the origin to the desired coordinate and express as a coordinate vector and obtain the angle
     float l3 =  pow(xpos,2) + pow(ypos,2);
@@ -91,7 +91,8 @@ void PositionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) 
         upArm->desiredAngle = 145*PI/180;
     else if (upArm->desiredAngle < -145*PI/180)
         upArm->desiredAngle = -145*PI/180;
-
 }
+
+
 
 

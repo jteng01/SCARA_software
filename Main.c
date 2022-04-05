@@ -1,10 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define PI 3.14159265358979323846
-#define TRUE 1
-#define FALSE 0
-
 #define MOTOR1PWM 13
 #define MOTOR2PWM 12
 #define MOTOR1DIRECTION 6
@@ -23,13 +19,14 @@
 #define TX 18
 #define RX 19
 
-#define HIGH 1
-#define LOW 0
-
 #define A1B1 1
 #define A0B0 3
 #define A1B0 4
 #define A0B1 2
+
+/*
+Data structure/classes and functions to manipulate the class/object
+*/
 
 //create a data structure holding the position and angle data of each arm
 struct SCARAArm {
@@ -40,93 +37,8 @@ struct SCARAArm {
 };
 typedef struct SCARAArm SCARAArm;
 
-
-/*
-InitializeArm
-
-Inputs:
-struct SCARAArm* arm
-float length
-
-Purpose:function to modify the gains of the PID values
-
-*/
-void InitializeArm(SCARAArm* arm, float length) {
-    arm->length = length;
-    arm->armVector[0] = length;
-    arm->armVector[1] = 0;
-    arm->encoderAngle = 0;
-    arm->desiredAngle = 0;
-}
-
-/*
-RotateVector
-
-Inputs:
-float theta
-float posvec[] SIZE 2
-
-Purpose: Rotates the arm to a desired angle counter clockwise
-
-*/
-void RotateVector(float theta, float posvec[]) {
-    posvec[0] = cos(theta) * posvec[0] - sin(theta) * posvec[0];
-    posvec[1] = sin(theta) * posvec[1] + cos(theta) * posvec[1];
-}
-
-/*
-PositionToAngle
-Inputs:
-SCARAArm lowArm
-SCARAArm upArm
-float xpos
-float ypos
-
-purpose: find the desired angles required to move the arms to the desired position,
-the c code implements the function PostoAngle.m written in matlab
-*/
-void PositionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) {
-
-    //set l3 as the length of the origin to the desired coordinate and express as a coordinate vector and obtain the angle
-    float l3 = pow(xpos, 2) + pow(ypos, 2);
-    float posangle = atan2(xpos, ypos);
-    float posVec[2] = { xpos, ypos };
-
-    //Do not do anything if the coordinate is out of bounds which is the sum of the arm lengths
-    if (pow(posVec[0], 2) + pow(posVec[1], 2) > (double)upArm->length + lowArm->length)
-        return;
-
-    //find the angle difference of the lower arm using the cosine law
-    float thetal1l3 = acos((pow(lowArm->length, 2) + pow(l3, 2) - pow(upArm->length, 2)) / ((double)2 * lowArm->length * l3));
-    //subtract the position vector by the angle difference
-    lowArm->desiredAngle = posangle - thetal1l3;
-
-    //rotate the arm coordinates to be used in finding the upper arm angle
-    rotateVector(lowArm->desiredAngle, lowArm);
-
-    //subtract the position vector by the lower arm vector to get the direction vector of the uppper arm
-    for (int i = 0; i < 2; i++)
-    {
-        upArm->armVector[i] = posVec[i] - lowArm->armVector[i];
-    }
-
-    //find the angle of the 2nd arm and offset it by the lower arm angle since the lower arm rotates the reference coordinate
-    //system of the upper arm
-    upArm->desiredAngle = atan2(upArm->armVector[0], upArm->armVector[1]) - lowArm->desiredAngle;
-
-    //saturate the arm output to meet the RCG of +/- 145 deg of the arm 
-    if (upArm->desiredAngle > 145 * PI / 180)
-        upArm->desiredAngle = 145 * PI / 180;
-    else if (upArm->desiredAngle < -145 * PI / 180)
-        upArm->desiredAngle = -145 * PI / 180;
-
-}
-
-
-
-
-//create a data structure holding the PID controller for each arm
-typedef struct PID {
+//create a data structure holding the PIDCont controller for each arm
+struct PIDCont {
     //gains
     float ki;
     float kp;
@@ -152,19 +64,111 @@ typedef struct PID {
     //output
     float out;
 };
-typedef struct PID PID;
+typedef struct PIDCont PIDCont;
+
+//use a linked list to help with path planning and telling where and when the arm should move
+struct PositionNode {
+    float xpos;
+    float ypos;
+    int pauseTime;
+    struct PositionNode* next;
+};
+typedef struct PositionNode PositionNode;
+
 
 /*
-InitializePID
+initializeArm
 
 Inputs:
-struct PID* pid
-float ISRtime
+struct SCARAArm* arm
+float length
 
-Purpose:function to initialize the PID values
+Purpose:function to modify the gains of the PIDCont values
 
 */
-void InitializePID(PID* pid, float ISRtime) {
+void initializeArm(SCARAArm* arm, float length) {
+    arm->length = length;
+    arm->armVector[0] = length;
+    arm->armVector[1] = 0;
+    arm->encoderAngle = 0;
+    arm->desiredAngle = 0;
+}
+
+/*
+rotateVector
+
+Inputs:
+float theta
+float posvec[] SIZE 2
+
+Purpose: Rotates the arm to a desired angle counter clockwise
+
+*/
+void rotateVector(float theta, float posvec[]) {
+    posvec[0] = cos(theta) * posvec[0] - sin(theta) * posvec[0];
+    posvec[1] = sin(theta) * posvec[1] + cos(theta) * posvec[1];
+}
+
+/*
+positionToAngle
+Inputs:
+SCARAArm lowArm
+SCARAArm upArm
+float xpos
+float ypos
+
+purpose: find the desired angles required to move the arms to the desired position,
+the c code implements the function PostoAngle.m written in matlab
+*/
+void positionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) {
+
+    //set l3 as the length of the origin to the desired coordinate and express as a coordinate vector and obtain the angle
+    float l3 = pow(xpos, 2) + pow(ypos, 2);
+    float posangle = atan2(xpos, ypos);
+    float posVec[2] = { xpos, ypos };
+
+    //Do not do anything if the coordinate is out of bounds which is the sum of the arm lengths
+    if (pow(posVec[0], 2) + pow(posVec[1], 2) > (double)upArm->length + lowArm->length)
+        return;
+
+    //find the angle difference of the lower arm using the cosine law
+    float thetal1l3 = acos((pow(lowArm->length, 2) + pow(l3, 2) - pow(upArm->length, 2)) / ((double)2 * lowArm->length * l3));
+    //subtract the position vector by the angle difference
+    lowArm->desiredAngle = posangle - thetal1l3;
+
+    //rotate the arm coordinates to be used in finding the upper arm angle
+    rotateVector(lowArm->desiredAngle, lowArm->armVector);
+
+    //subtract the position vector by the lower arm vector to get the direction vector of the uppper arm
+    for (int i = 0; i < 2; i++)
+    {
+        upArm->armVector[i] = posVec[i] - lowArm->armVector[i];
+    }
+
+    //find the angle of the 2nd arm and offset it by the lower arm angle since the lower arm rotates the reference coordinate
+    //system of the upper arm
+    upArm->desiredAngle = atan2(upArm->armVector[0], upArm->armVector[1]) - lowArm->desiredAngle;
+
+    //saturate the arm output to meet the RCG of +/- 145 deg of the arm 
+    if (upArm->desiredAngle > 145 * PI / 180)
+        upArm->desiredAngle = 145 * PI / 180;
+    else if (upArm->desiredAngle < -145 * PI / 180)
+        upArm->desiredAngle = -145 * PI / 180;
+
+}
+
+
+/*
+initializePIDCont
+
+Inputs:
+struct PIDCont* pid
+float ISRtime
+
+Purpose:function to initialize the PIDCont values
+
+*/
+void initializePIDCont(PIDCont* pid, float ISRtime) {
     pid->ISRtime = ISRtime;
     pid->integralVal = 0;
     pid->derivativeVal = 0;
@@ -174,35 +178,35 @@ void InitializePID(PID* pid, float ISRtime) {
 }
 
 /*
-TunePID
+tunePIDCont
 
 Inputs:
-struct PID* pid
+struct PIDCont* pid
 float ki
 float kd
 float kp
 float K
 
-Purpose:function to modify the gains of the PID values
+Purpose:function to modify the gains of the PIDCont values
 
 */
-void TunePID(PID* pid, float ki, float kd, float kp, float K) {
-    pid->kp = kp;
-    pid->ki = ki;
-    pid->kd = kd;
-    pid->K = K;
+void tunePIDCont(PIDCont* pid, float Ki, float Kd, float Kp, float Kult) {
+    pid->kp = Kp;
+    pid->ki = Ki;
+    pid->kd = Kd;
+    pid->K = Kult;
 }
 
 /*
-CalculatePID
+calculatePIDCont
 Inputs:
-struct PID* pid
+struct PIDCont* pid
 float measurement
 float desired
 
-Purpose: Update the output of the PID aby multiplying the gain, taking the derivative, and integral
+Purpose: Update the output of the PIDCont aby multiplying the gain, taking the derivative, and integral
 */
-void CalculatePID(PID* pid, float measurement, float desired) {
+void calculatePIDCont(PIDCont* pid, float measurement, float desired) {
     //obtain the error of the arm angle
     pid->currentError = desired - measurement;
 
@@ -213,7 +217,7 @@ void CalculatePID(PID* pid, float measurement, float desired) {
     //perform and integral by taking the difference of error over the ISR period and multiply by the derivative gain
     pid->derivativeVal = pid->kd * (measurement - pid->prevMeasure) / pid->ISRtime;
 
-    //sum all the PID terms and multiply by the ultimate gain
+    //sum all the PIDCont terms and multiply by the ultimate gain
     pid->out = (pid->proportionalVal + pid->integralVal + pid->derivativeVal) * pid->K;
 
     if (pid->out > 24)
@@ -221,94 +225,114 @@ void CalculatePID(PID* pid, float measurement, float desired) {
     else if (pid->out < -24)
         pid->out = -24;
 
-    //save the error to be used in the next PID calculation for integral and derivative
+    //save the error to be used in the next PIDCont calculation for integral and derivative
     pid->prevError = pid->currentError;
     pid->prevMeasure = measurement;
 }
 
+void appendPosition(PositionNode** head, float xpos, float ypos, int msPauseTime)
+{
+    PositionNode* newNode = (PositionNode*)malloc(sizeof(PositionNode));
 
-//use a linked list to help with path planning and telling where and when the arm should move
-struct PositionList {
-    float coordinates[2];
-    int time;
-    int index;
-    struct PositionList* next;
-};
-typedef struct PositionList PositionList;
+    newNode->pauseTime = msPauseTime;
+    newNode->xpos = xpos;
+    newNode->ypos = ypos;
+    newNode->next = NULL;
+
+    PositionNode* p = *head;
+
+    if (*head == NULL)
+        *head = newNode;
+
+    else {//traverse to the end
+        while (p->next != NULL) {
+            p = p->next;
+        }
+        p->next = newNode;
+    }
+}
+
+void insertPosition(PositionNode** head, float xpos, float ypos, int msPauseTime, int pos) {
+
+    PositionNode* newNode = (PositionNode*)malloc(sizeof(PositionNode));
+
+    newNode->pauseTime = msPauseTime;
+    newNode->xpos = xpos;
+    newNode->ypos = ypos;
+    newNode->next = NULL;
+
+    if (*head == NULL) {
+        *head = newNode;
+        return;
+    }
+
+    PositionNode* p = *head;
+    PositionNode* nextHead = p->next;
+    int i;
+
+    if (pos == 0) {
+        newNode->next = *head;
+        *head = newNode;
+        return;
+    }
+
+    for (i = 1; i < pos; i++) {
+        nextHead = nextHead->next;
+        p = p->next;
+
+        if (nextHead->next == NULL) {
+            nextHead->next = newNode;
+            return;
+        }
+
+    }
+
+    p->next = newNode;
+    newNode->next = nextHead;
+}
+
+void deletePosition(PositionNode** head, int pos) {
+
+    if (*head == NULL)
+        return;
+
+    PositionNode* p = *head;
+    PositionNode* nextHead = p->next;
+
+    if (pos == 0) {
+        free(p);
+        *head = nextHead;
+        return;
+    }
+
+    int i;
+
+    for (i = 1; i < pos; i++) {
+        nextHead = nextHead->next;
+        p = p->next;
+        if (nextHead->next == NULL) {
+            free(nextHead);
+            p->next = NULL;
+            return;
+        }
+    }
+
+    p->next = nextHead->next;
+    free(nextHead);
+
+}
+
+
+
+
+
+
+
 
 
 /*
-InitializePID
-
-Inputs:
-struct PID* pid
-float ISRtime
-
-Purpose:function to initialize the PID values
-
+Main code that drives the SCARA arm
 */
-void InitializePID(PID* pid, float ISRtime) {
-    pid->ISRtime = ISRtime;
-    pid->integralVal = 0;
-    pid->derivativeVal = 0;
-    pid->proportionalVal = 0;
-    pid->prevError = 0;
-    pid->prevMeasure = 0;
-}
-
-/*
-TunePID
-
-Inputs:
-struct PID* pid
-float ki
-float kd
-float kp
-float K
-
-Purpose:function to modify the gains of the PID values
-
-*/
-void TunePID(PID* pid, float ki, float kd, float kp, float K) {
-    pid->kp = kp;
-    pid->ki = ki;
-    pid->kd = kd;
-    pid->K = K;
-}
-
-/*
-CalculatePID
-Inputs:
-struct PID* pid
-float measurement
-float desired
-
-Purpose: Update the output of the PID aby multiplying the gain, taking the derivative, and integral
-*/
-void CalculatePID(PID* pid, float measurement, float desired) {
-    //obtain the error of the arm angle
-    pid->currentError = measurement - desired;
-
-    //multply the error by the porportional gain
-    pid->proportionalVal = pid->kp * pid->currentError;
-    //perform and integral by using the trapezoidal rule multiplied by integral gain
-    pid->integralVal += pid->ISRtime * (pid->currentError + pid->prevError) / 2 * pid->ki;
-    //perform and integral by taking the difference of error over the ISR period and multiply by the derivative gain
-    pid->derivativeVal = pid->kd * (measurement - pid->prevMeasure) / pid->ISRtime;
-
-    //sum all the PID terms and multiply by the ultimate gain
-    pid->out = (pid->proportionalVal + pid->integralVal + pid->derivativeVal) * pid->K;
-
-    if (pid->out > 24)
-        pid->out = 24;
-    else if (pid->out < -24)
-        pid->out = -24;
-
-    //save the error to be used in the next PID calculation for integral and derivative
-    pid->prevError = pid->currentError;
-    pid->prevMeasure = measurement;
-}
-
 
 //motor states
 int stateMotor1;
@@ -324,22 +348,28 @@ int encoderB2;
 SCARAArm upperArm;
 SCARAArm lowerArm;
 
-//PID controllers
-PID pid1;
-PID pid2;
+//PIDCont controllers
+PIDCont pid1;
+PIDCont pid2;
 
 //path planing list
-PositionList head;
+PositionNode* headList = NULL;
 
 void setup() {
     Serial.begin(115200);
 
     //setup timer for 1ms ISR, timer has CF of 16MHz
     noInterrupts();
-    TCCR1A = 0;			    //Reset entire TCCR1A register
-    TCCR1B = 0;			    //Reset entire TCCR1B register
-    TCCR1A |= B00000100;    //Set CS12 to 1 so we get Prescalar = 256
-    TCNT1 = 0;			    //Reset Timer 1 value to 0
+
+    //set timer0 interrupt at 1000Hz
+    TCCR0A = 0;
+    TCCR0B = 0; //reset timer0 registers
+    TCNT0 = 0;//initialize counter value to 0
+
+    OCR0A = 249;// compare to = (116MHz) / (1Hz*prescalar) - 1
+    TCCR0A |= (1 << WGM01); //turn on CTC mode, reset when timer reaches OCR0A value
+    TCCR0B |= (1 << CS01) | (1 << CS00); //set the prescalar to 64
+    TIMSK0 |= (1 << OCIE0A); //enable timer interupt
 
     //specify whether the pins are output or input
     pinMode(MOTOR1PWM, OUTPUT);
@@ -347,37 +377,37 @@ void setup() {
     pinMode(MOTOR1DIRECTION, OUTPUT);
     pinMode(MOTOR2DIRECTION, OUTPUT);
     pinMode(ENCODERA1, INPUT);
-    pinmode(ENCODERA2, INPUT);
+    pinMode(ENCODERA2, INPUT);
     pinMode(ENCODERB1, INPUT);
-    pinmode(ENCODERB2, INPUT);
+    pinMode(ENCODERB2, INPUT);
     pinMode(HOMING1, INPUT);
-    pinmode(HOMING2, INPUT);
-    pinmode(LIMIT2LOW, INPUT);
+    pinMode(HOMING2, INPUT);
+    pinMode(LIMIT2LOW, INPUT);
 
-    //create the PID structures
-    InitializePID(&pid1, 0.001);
-    InitializePID(&pid2, 0.001);
+    //create the PIDCont structures
+    initializePIDCont(&pid1, 0.001);
+    initializePIDCont(&pid2, 0.001);
 
-    //tune the PID found from the simulink and simx using heurestic tuning
-    tunePID(&pid1, 1, 1, 1, 1);
-    tunePID(&pid2, 1, 1, 1, 1);
+    //tune the PIDCont found from the simulink and simx using heurestic tuning
+    tunePIDCont(&pid1, (float)1, (float)1, (float)1, (float)1);
+    tunePIDCont(&pid2, (float)1, (float)1, (float)1, (float)1);
 
     //create the arm structures
-    InitializeArm(&upperArm, 0.4);
-    InitializeArm(&lowerArm, 0.4);
-    
+    initializeArm(&upperArm, 0.4);
+    initializeArm(&lowerArm, 0.4);
+
     //setup interupts for the encoder
-    attachInterrupt(digitalPinToInterrupt(), ChangePosA1, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(), ChangePosB1, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(), ChangePosA2, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(), ChangePosB2, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(ENCODERA1), changePosA1, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(ENCODERA2), changePosB1, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(ENCODERB1), changePosA2, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(ENCODERB2), changePosB2, CHANGE);
 
     //begin homing, start with rotating the arms clockwise at low speed
     digitalWrite(MOTOR1DIRECTION, CW);
-    analogWrite(MOTOR1PWM, 4 * 255 / 24);
+    analogWrite(MOTOR1PWM, 255 - (4 * 255 / 24));
     //arm2 will reach a lower limit when clockwise
     digitalWrite(MOTOR2DIRECTION, CW);
-    analogWrite(MOTOR2PWM, 4 * 255 / 24);
+    analogWrite(MOTOR2PWM, 255 - (4 * 255 / 24));
 
     while (1)
     {
@@ -386,7 +416,7 @@ void setup() {
         int interuptEnabled = 0;
 
         //stop the motors once the arm is homed
-        if(digitalRead(HOMING1) == 1 && motor1Homed == 0){
+        if (digitalRead(HOMING1) == 1 && motor1Homed == 0) {
             motor1Homed == 1;
             analogWrite(MOTOR1PWM, 0);
         }
@@ -397,7 +427,7 @@ void setup() {
         }
 
         //reverse the 2nd motor once it reaches the lower limit 
-        if(digitalRead(LIMIT2LOW) == 1)
+        if (digitalRead(LIMIT2LOW) == 1)
             digitalWrite(MOTOR2DIRECTION, CCW);
 
         //break the loop once homed
@@ -410,8 +440,15 @@ void setup() {
     encoderA2 = digitalRead(ENCODERA2);
     encoderB1 = digitalRead(ENCODERB1);
     encoderB2 = digitalRead(ENCODERB2);
-    InitializeStates(encoderA1, encoderB1, &stateMotor1);
-    InitializeStates(encoderA2, encoderB2, &stateMotor2);
+    initializeStates(&stateMotor1, encoderA1, encoderB1);
+    initializeStates(&stateMotor2, encoderA2, encoderB2);
+
+    appendPosition(&headList, 0.3, 0.2, 1);
+    appendPosition(&headList, 0.4, 0.2, 2);
+    appendPosition(&headList, 0.3, 0.1, 3);
+    appendPosition(&headList, 0.3, 0.2, 4);
+    appendPosition(&headList, 0.4, 0.2, 5);
+    appendPosition(&headList, 0.3, 0.1, 6);
 
 
 }
@@ -419,12 +456,19 @@ void setup() {
 
 
 void loop() {
-    
-    //run the code indefinetly
+
+    PositionNode* p = headList;
+    while (p != NULL) {
+        Serial.println();
+        positionToAngle(&upperArm, &lowerArm, p->xpos, p->ypos);
+        delay(p->pauseTime);
+        p = p->next;
+    }
+
 
 }
 
-void InitializeStates(int * state, int encoderA, int encoderB){
+void initializeStates(int* state, int encoderA, int encoderB) {
 
     if (encoderA == HIGH & encoderB == HIGH)
         *state = A1B1;
@@ -438,124 +482,124 @@ void InitializeStates(int * state, int encoderA, int encoderB){
 
 //ISR functions
 
-//update the PID values and control the motors at 1000Hz (1ms)
-ISR(TIMER1_COMPA_vect) {
-    //update the PID values
-    CalculatePID(&pid1, lowerArm.encoderAngle, lowerArm.desiredAngle);
-    CalculatePID(&pid2, upperArm.encoderAngle, upperArm.desiredAngle);
+//update the PIDCont values and control the motors at 1000Hz (1ms)
+ISR(TIMER0_COMPA_vect) {
+    //update the PIDCont values
+    calculatePIDCont(&pid1, lowerArm.encoderAngle, lowerArm.desiredAngle);
+    calculatePIDCont(&pid2, upperArm.encoderAngle, upperArm.desiredAngle);
 
-    //drive the lower arm motor using the PID output
-    analogWrite(MOTOR1PWM, (int)fabs(pid1.out) * 255 / 24);
+    //drive the lower arm motor using the PIDCont output, the amplifier inverts the PWM signal where 5V 75% PWM input outputs 24V 25% 
+    analogWrite(MOTOR1PWM, (int)(255 - (fabs(pid1.out) * 255 / 24)));
     digitalWrite(MOTOR1DIRECTION, (pid1.out >= 0));
 
-    //drive the upper arm motor using the PID output
-    analogWrite(MOTOR2PWM, (int) fabs(pid2.out) * 255/24);
+    //drive the upper arm motor using the PIDCont output
+    analogWrite(MOTOR2PWM, (int)(255 - (fabs(pid2.out) * 255 / 24)));
     digitalWrite(MOTOR2DIRECTION, (pid2.out >= 0));
 
 }
 
 //Change the position given the encoder reading, A leads B when clockwise and B leads A when counter clockwise
-void ChangePosA1() {
+void changePosA1() {
     int AValue = digitalRead(ENCODERA1);
 
     //A falls when B is on, B is leading and position goes down
     if (stateMotor1 == A1B1 && AValue == 0) {
-        lowerArm.encoderAngle+= 2*PI/600;
+        lowerArm.encoderAngle += 2 * PI / 600;
         stateMotor1 = A0B1;
     }
 
     //A rises when B is off, A is leading and position goes down
     else if (stateMotor1 == A0B1 && AValue == 1) {
-        lowerArm.encoderAngle-= 2*PI/600;
+        lowerArm.encoderAngle -= 2 * PI / 600;
         stateMotor1 = A1B1;
     }
 
     //A falls when B is on, A is leading and position goes down
     else if (stateMotor1 == A1B0 && AValue == 0) {
-        lowerArm.encoderAngle-= 2*PI/600;
+        lowerArm.encoderAngle -= 2 * PI / 600;
         stateMotor1 = A0B0;
     }
 
     //A falls when B is on, B is leading and position goes up
     else if (stateMotor1 == A0B0 && AValue == 1) {
-        lowerArm.encoderAngle+= 2*PI/600;
+        lowerArm.encoderAngle += 2 * PI / 600;
         stateMotor1 = A1B0;
     }
 
 }
 
-void ChangePosB1() {
+void changePosB1() {
     int BValue = digitalRead(ENCODERB1);
 
     //A is on and B falls, B is leading and position goes up
     if (stateMotor1 == A1B1 && BValue == 0) {
-        lowerArm.encoderAngle+=2*PI/600;
+        lowerArm.encoderAngle += 2 * PI / 600;
         stateMotor1 = A1B0;
     }
 
     //A is on and B rises, A is leading and position goes down
     else if (stateMotor1 == A1B0 && BValue == 1) {
-        lowerArm.encoderAngle-= 2*PI/600;
+        lowerArm.encoderAngle -= 2 * PI / 600;
         stateMotor1 = A1B1;
     }
 
     //A is off and B falls, A is leading and position goes down
     else if (stateMotor1 == A0B1 && BValue == 0) {
-        lowerArm.encoderAngle-=2*PI/600;
+        lowerArm.encoderAngle -= 2 * PI / 600;
         stateMotor1 = A0B0;
     }
 
     //A is off and B rises, B is leading and position goes up
     else if (stateMotor1 == A0B0 && BValue == 1) {
-        lowerArm.encoderAngle+=2*PI/600;
+        lowerArm.encoderAngle += 2 * PI / 600;
         stateMotor1 = A0B1;
     }
 }
 
-void ChangePosA2() {
+void changePosA2() {
     int AValue = digitalRead(ENCODERA1);
 
     if (stateMotor2 == A1B1 && AValue == 0) {
-        upperArm.encoderAngle+=2*PI/600;
+        upperArm.encoderAngle += 2 * PI / 600;
         stateMotor2 = A0B1;
     }
 
     else if (stateMotor2 == A0B1 && AValue == 1) {
-        upperArm.encoderAngle-=2*PI/600;
+        upperArm.encoderAngle -= 2 * PI / 600;
         stateMotor2 = A1B1;
     }
 
     else if (stateMotor2 == A1B0 && AValue == 0) {
-        upperArm.encoderAngle-=2*PI/600;
+        upperArm.encoderAngle -= 2 * PI / 600;
         stateMotor2 = A0B0;
     }
 
     else if (stateMotor2 == A0B0 && AValue == 1) {
-        upperArm.encoderAngle+=2*PI/600;
+        upperArm.encoderAngle += 2 * PI / 600;
         stateMotor2 = A1B0;
     }
 }
 
-void ChangePosB2() {
+void changePosB2() {
     int BValue = digitalRead(ENCODERB1);
 
     if (stateMotor2 == A1B1 && BValue == 0) {
-        upperArm.encoderAngle+=2*PI/600;
+        upperArm.encoderAngle += 2 * PI / 600;
         stateMotor2 = A1B0;
     }
 
     else if (stateMotor2 == A1B0 && BValue == 1) {
-        upperArm.encoderAngle-=2*PI/600;
+        upperArm.encoderAngle -= 2 * PI / 600;
         stateMotor2 = A1B1;
     }
 
     else if (stateMotor1 == A0B1 && BValue == 0) {
-        upperArm.encoderAngle-=2*PI/600;
+        upperArm.encoderAngle -= 2 * PI / 600;
         stateMotor2 = A0B0;
     }
 
     else if (stateMotor1 == A0B0 && BValue == 1) {
-        upperArm.encoderAngle+=2*PI/600;
+        upperArm.encoderAngle += 2 * PI / 600;
         stateMotor2 = A0B1;
     }
 }

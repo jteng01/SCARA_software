@@ -27,7 +27,7 @@ typedef struct PID{
 typedef struct PID PID;
 
 /*
-InitializePID
+initializePID
 
 Inputs: 
 struct PID* pid
@@ -36,7 +36,7 @@ float ISRtime
 Purpose:function to initialize the PID values
 
 */
-void InitializePID(PID *pid, float ISRtime) {
+void initializePID(PID *pid, float ISRtime) {
 	pid-> ISRtime = ISRtime;
 	pid-> integralVal = 0;
 	pid-> derivativeVal = 0;
@@ -46,7 +46,7 @@ void InitializePID(PID *pid, float ISRtime) {
 }
 
 /*
-TunePID
+tunePID
 
 Inputs:
 struct PID* pid
@@ -58,7 +58,7 @@ float K
 Purpose:function to modify the gains of the PID values
 
 */
-void TunePID(PID *pid, float ki, float kd, float kp, float K){
+void tunePID(PID *pid, float ki, float kd, float kp, float K){
 	pid->kp = kp;
 	pid->ki = ki;
 	pid->kd = kd;
@@ -66,7 +66,7 @@ void TunePID(PID *pid, float ki, float kd, float kp, float K){
 }
 
 /*
-CalculatePID
+calculatePID
 Inputs:
 struct PID* pid
 float measurement
@@ -74,7 +74,7 @@ float desired
 
 Purpose: Update the output of the PID aby multiplying the gain, taking the derivative, and integral
 */
-void CalculatePID(PID *pid, float measurement, float desired){
+void calculatePID(PID *pid, float measurement, float desired){
 	//obtain the error of the arm angle
 	pid->currentError = measurement - desired;
 

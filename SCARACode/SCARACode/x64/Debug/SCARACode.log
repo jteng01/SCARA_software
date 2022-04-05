@@ -1,0 +1,116 @@
+﻿  Kinematics.c
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(45,38): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(46,38): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(77,46): warning C4133: 'function': incompatible types - from 'SCARAArm *' to 'float *'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(87,75): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(91,41): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(93,42): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(63,29): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(64,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Kinematics.c(72,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Main.c
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(108,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(109,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(150,75): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(153,40): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(154,40): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(154,40): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(155,46): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(156,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(156,41): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(126,29): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(127,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(135,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(266,11): error C2065: 'Serial': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(266,12): error C2224: left of '.begin' must have struct/union type
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(269,17): warning C4013: 'noInterrupts' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(272,12): error C2065: 'TCCR0A': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(273,12): error C2065: 'TCCR0B': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(274,11): error C2065: 'TCNT0': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(276,11): error C2065: 'OCR0A': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(277,12): error C2065: 'TCCR0A': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(277,26): error C2065: 'WGM01': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(278,12): error C2065: 'TCCR0B': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(278,25): error C2065: 'CS01': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(278,39): error C2065: 'CS00': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(279,12): error C2065: 'TIMSK0': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(279,27): error C2065: 'OCIE0A': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(282,12): warning C4013: 'pinMode' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(282,30): error C2065: 'OUTPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(283,30): error C2065: 'OUTPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(284,36): error C2065: 'OUTPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(285,36): error C2065: 'OUTPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(286,29): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(287,29): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(288,29): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(289,29): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(290,20): error C2065: 'A1': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(290,27): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(291,20): error C2065: 'A2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(291,27): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(292,22): error C2065: 'A2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(292,29): error C2065: 'INPUT': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(295,35): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(296,35): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(303,33): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(304,33): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(307,20): warning C4013: 'attachInterrupt' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(307,42): warning C4013: 'digitalPinToInterrupt' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(307,66): error C2065: 'changePosA1': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(307,74): error C2065: 'CHANGE': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(308,66): error C2065: 'changePosB1': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(308,74): error C2065: 'CHANGE': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(309,66): error C2065: 'changePosA2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(309,74): error C2065: 'CHANGE': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(310,66): error C2065: 'changePosB2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(310,74): error C2065: 'CHANGE': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(313,17): warning C4013: 'digitalWrite' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(314,16): warning C4013: 'analogWrite' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(326,24): warning C4013: 'digitalRead' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(326,32): error C2065: 'A1': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(327,25): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(331,32): error C2065: 'A2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(332,25): warning C4553: '==': result of expression not used; did you intend '='?
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(337,34): error C2065: 'A2': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(350,21): warning C4013: 'initializeStates' undefined; assuming extern returning int
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(364,6): error C2371: 'initializeStates': redefinition; different basic types
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(366,26): error C2065: 'HIGH': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(366,44): error C2065: 'HIGH': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(366,44): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(368,30): error C2065: 'LOW': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(368,47): error C2065: 'LOW': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(368,47): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(370,30): error C2065: 'LOW': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(370,48): error C2065: 'HIGH': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(370,48): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(372,31): error C2065: 'HIGH': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(372,48): error C2065: 'LOW': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(372,48): warning C4554: '&': check operator precedence for possible error; use parentheses to clarify precedence
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(400,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(406,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(412,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(418,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(429,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(435,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(441,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(447,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(456,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(461,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(466,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(471,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(480,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(485,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(490,41): error C2065: 'PI': undeclared identifier
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\Main.c(495,41): error C2065: 'PI': undeclared identifier
+  PIDController.c
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PIDController.c(26,2): warning C4091: 'typedef ': ignored on left of 'PID' when no variable is declared
+  PathPlanning.c
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(54,25): warning C4552: '<': result of expression not used
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(87,25): warning C4552: '<': result of expression not used
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(118,31): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(118,36): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(119,31): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(119,36): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(120,31): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\PathPlanning.c(120,36): warning C4305: 'function': truncation from 'double' to 'float'
+  Generating Code...
