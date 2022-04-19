@@ -116,12 +116,26 @@ void traverse(PositionNode* head) {
 int main() {
 
 	PositionNode* headList = NULL;
-	appendPosition(&headList, 0.3, 0.2, 1);
-	appendPosition(&headList, 0.4, 0.2, 2);
-	appendPosition(&headList, 0.3, 0.1, 3);
-	appendPosition(&headList, 0.3, 0.2, 4);
-	appendPosition(&headList, 0.4, 0.2, 5);
-	appendPosition(&headList, 0.3, 0.1, 6);
+	FILE* fileptr;
+
+	fileptr = fopen("PositionData", "r");
+
+	if (fileptr == NULL) {
+		printf("Can not open file.");
+	}
+	else
+	{
+		float xAppend;
+		float yAppend;
+		float deltaTAppend;
+		while (fscanf(fileptr, "%f %f %d\n", xAppend, yAppend, deltaTAppend) != EOF)
+		{
+			appendPosition(&headList, xAppend, yAppend, deltaTAppend);
+		}
+
+		fclose(fileptr);
+	}
+
 	traverse(headList);
 
 	deletePosition(&headList, 5);

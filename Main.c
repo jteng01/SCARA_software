@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define MOTOR1PWM 13
 #define MOTOR2PWM 12
@@ -83,7 +84,7 @@ Inputs:
 struct SCARAArm* arm
 float length
 
-Purpose:function to modify the gains of the PIDCont values
+Purpose:function to initialize the arm
 
 */
 void initializeArm(SCARAArm* arm, float length) {
@@ -99,14 +100,17 @@ rotateVector
 
 Inputs:
 float theta
-float posvec[] SIZE 2
+float posvec[2]
 
 Purpose: Rotates the arm to a desired angle counter clockwise
 
 */
 void rotateVector(float theta, float posvec[]) {
-    posvec[0] = cos(theta) * posvec[0] - sin(theta) * posvec[0];
-    posvec[1] = sin(theta) * posvec[1] + cos(theta) * posvec[1];
+    float newX = posvec[0] * cos(theta) - posvec[1] * sin(theta);
+    float newY = posvec[0] * sin(theta) + posvec[1] * cos(theta);
+
+    posvec[0] = newX;
+    posvec[1] = newY;
 }
 
 /*
@@ -123,8 +127,8 @@ the c code implements the function PostoAngle.m written in matlab
 void positionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) {
 
     //set l3 as the length of the origin to the desired coordinate and express as a coordinate vector and obtain the angle
-    float l3 = pow(xpos, 2) + pow(ypos, 2);
-    float posangle = atan2(xpos, ypos);
+    float l3 = sqrt(pow(xpos, 2) + pow(ypos, 2));
+    float posangle = atan2(ypos, xpos);
     float posVec[2] = { xpos, ypos };
 
     //Do not do anything if the coordinate is out of bounds which is the sum of the arm lengths
@@ -132,7 +136,7 @@ void positionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) 
         return;
 
     //find the angle difference of the lower arm using the cosine law
-    float thetal1l3 = acos((pow(lowArm->length, 2) + pow(l3, 2) - pow(upArm->length, 2)) / ((double)2 * lowArm->length * l3));
+    float thetal1l3 = acos((pow(lowArm->length, 2) + pow(l3, 2) - pow(upArm->length, 2)) / ((double)(2 * lowArm->length * l3)));
     //subtract the position vector by the angle difference
     lowArm->desiredAngle = posangle - thetal1l3;
 
@@ -147,14 +151,41 @@ void positionToAngle(SCARAArm* lowArm, SCARAArm* upArm, float xpos, float ypos) 
 
     //find the angle of the 2nd arm and offset it by the lower arm angle since the lower arm rotates the reference coordinate
     //system of the upper arm
-    upArm->desiredAngle = atan2(upArm->armVector[0], upArm->armVector[1]) - lowArm->desiredAngle;
+    upArm->desiredAngle = atan2(upArm->armVector[1], upArm->armVector[0]) - lowArm->desiredAngle;
 
     //saturate the arm output to meet the RCG of +/- 145 deg of the arm 
     if (upArm->desiredAngle > 145 * PI / 180)
         upArm->desiredAngle = 145 * PI / 180;
     else if (upArm->desiredAngle < -145 * PI / 180)
         upArm->desiredAngle = -145 * PI / 180;
+}
 
+/*
+angleToPos
+Inputs:
+SCARAArm lowArm
+SCARAArm upArm
+float actualPos[2]
+
+purpose: find the position based on the actual angles of the arm
+*/
+void angleToPos(float actualPos[], SCARAArm* lowArm, SCARAArm* upArm) {
+
+    //create temkporary storage for the xy pos of the arm
+    float lowArmVec[2] = { 0, lowArm->length };
+
+    //rotate the arm
+    rotateVector(lowArm->encoderAngle, lowArmVec);
+
+    float upArmVec[2] = { 0, upArm->length };
+
+    //Offset the 2nd arm angle by the first arm angle
+    rotateVector(upArm->encoderAngle + lowArm->encoderAngle, upArmVec);
+
+    for (int i = 0; i < 2; i++)
+    {
+        actualPos[i] = lowArmVec[i] + upArmVec[i];
+    }
 }
 
 
@@ -413,21 +444,20 @@ void setup() {
     {
         int motor1Homed = 0;
         int motor2Homed = 0;
-        int interuptEnabled = 0;
 
-        //stop the motors once the arm is homed
-        if (digitalRead(HOMING1) == 1 && motor1Homed == 0) {
-            motor1Homed == 1;
+        //stop the motors once the arm is homed, sensor signal gets turned off
+        if (digitalRead(HOMING1) == 0 && motor1Homed == 0) {
+            motor1Homed == 0;
             analogWrite(MOTOR1PWM, 0);
         }
 
-        if (digitalRead(HOMING2) == 1 && motor2Homed == 0) {
-            motor1Homed == 1;
+        if (digitalRead(HOMING2) == 0 && motor2Homed == 0) {
+            motor1Homed == 0;
             analogWrite(MOTOR1PWM, 0);
         }
 
         //reverse the 2nd motor once it reaches the lower limit 
-        if (digitalRead(LIMIT2LOW) == 1)
+        if (digitalRead(LIMIT2LOW) == 0)
             digitalWrite(MOTOR2DIRECTION, CCW);
 
         //break the loop once homed
@@ -443,12 +473,27 @@ void setup() {
     initializeStates(&stateMotor1, encoderA1, encoderB1);
     initializeStates(&stateMotor2, encoderA2, encoderB2);
 
-    appendPosition(&headList, 0.3, 0.2, 1);
-    appendPosition(&headList, 0.4, 0.2, 2);
-    appendPosition(&headList, 0.3, 0.1, 3);
-    appendPosition(&headList, 0.3, 0.2, 4);
-    appendPosition(&headList, 0.4, 0.2, 5);
-    appendPosition(&headList, 0.3, 0.1, 6);
+    interrupts();
+
+    FILE* fileptr;
+
+    fileptr = fopen("PositionData.txt", "r");
+
+    if (fileptr == NULL) {
+        printf("Can not open file.");
+    }
+    else
+    {
+        float xAppend;
+        float yAppend;
+        float deltaTAppend;
+        while (fscanf(fileptr, "%f %f %d\n", xAppend, yAppend, deltaTAppend) != EOF)
+        {
+            appendPosition(&headList, xAppend, yAppend, deltaTAppend);
+        }
+
+        fclose(fileptr);
+    }
 
 
 }
@@ -488,7 +533,8 @@ ISR(TIMER0_COMPA_vect) {
     calculatePIDCont(&pid1, lowerArm.encoderAngle, lowerArm.desiredAngle);
     calculatePIDCont(&pid2, upperArm.encoderAngle, upperArm.desiredAngle);
 
-    //drive the lower arm motor using the PIDCont output, the amplifier inverts the PWM signal where 5V 75% PWM input outputs 24V 25% 
+    //drive the lower arm motor using the PIDCont output, the amplifier inverts the PWM signal where 5V 75% PWM input outputs a 24V 25% PWM signal
+    //in the amplifier
     analogWrite(MOTOR1PWM, (int)(255 - (fabs(pid1.out) * 255 / 24)));
     digitalWrite(MOTOR1DIRECTION, (pid1.out >= 0));
 
@@ -504,25 +550,25 @@ void changePosA1() {
 
     //A falls when B is on, B is leading and position goes down
     if (stateMotor1 == A1B1 && AValue == 0) {
-        lowerArm.encoderAngle += 2 * PI / 600;
+        lowerArm.encoderAngle += 2 * PI / 2400;
         stateMotor1 = A0B1;
     }
 
     //A rises when B is off, A is leading and position goes down
     else if (stateMotor1 == A0B1 && AValue == 1) {
-        lowerArm.encoderAngle -= 2 * PI / 600;
+        lowerArm.encoderAngle -= 2 * PI / 2400;
         stateMotor1 = A1B1;
     }
 
     //A falls when B is on, A is leading and position goes down
     else if (stateMotor1 == A1B0 && AValue == 0) {
-        lowerArm.encoderAngle -= 2 * PI / 600;
+        lowerArm.encoderAngle -= 2 * PI / 2400;
         stateMotor1 = A0B0;
     }
 
     //A falls when B is on, B is leading and position goes up
     else if (stateMotor1 == A0B0 && AValue == 1) {
-        lowerArm.encoderAngle += 2 * PI / 600;
+        lowerArm.encoderAngle += 2 * PI / 2400;
         stateMotor1 = A1B0;
     }
 
@@ -533,25 +579,25 @@ void changePosB1() {
 
     //A is on and B falls, B is leading and position goes up
     if (stateMotor1 == A1B1 && BValue == 0) {
-        lowerArm.encoderAngle += 2 * PI / 600;
+        lowerArm.encoderAngle += 2 * PI / 2400;
         stateMotor1 = A1B0;
     }
 
     //A is on and B rises, A is leading and position goes down
     else if (stateMotor1 == A1B0 && BValue == 1) {
-        lowerArm.encoderAngle -= 2 * PI / 600;
+        lowerArm.encoderAngle -= 2 * PI / 2400;
         stateMotor1 = A1B1;
     }
 
     //A is off and B falls, A is leading and position goes down
     else if (stateMotor1 == A0B1 && BValue == 0) {
-        lowerArm.encoderAngle -= 2 * PI / 600;
+        lowerArm.encoderAngle -= 2 * PI / 2400;
         stateMotor1 = A0B0;
     }
 
     //A is off and B rises, B is leading and position goes up
     else if (stateMotor1 == A0B0 && BValue == 1) {
-        lowerArm.encoderAngle += 2 * PI / 600;
+        lowerArm.encoderAngle += 2 * PI / 2400;
         stateMotor1 = A0B1;
     }
 }
@@ -560,22 +606,22 @@ void changePosA2() {
     int AValue = digitalRead(ENCODERA1);
 
     if (stateMotor2 == A1B1 && AValue == 0) {
-        upperArm.encoderAngle += 2 * PI / 600;
+        upperArm.encoderAngle += 2 * PI / 2400;
         stateMotor2 = A0B1;
     }
 
     else if (stateMotor2 == A0B1 && AValue == 1) {
-        upperArm.encoderAngle -= 2 * PI / 600;
+        upperArm.encoderAngle -= 2 * PI / 2400;
         stateMotor2 = A1B1;
     }
 
     else if (stateMotor2 == A1B0 && AValue == 0) {
-        upperArm.encoderAngle -= 2 * PI / 600;
+        upperArm.encoderAngle -= 2 * PI / 2400;
         stateMotor2 = A0B0;
     }
 
     else if (stateMotor2 == A0B0 && AValue == 1) {
-        upperArm.encoderAngle += 2 * PI / 600;
+        upperArm.encoderAngle += 2 * PI / 2400;
         stateMotor2 = A1B0;
     }
 }
@@ -584,22 +630,22 @@ void changePosB2() {
     int BValue = digitalRead(ENCODERB1);
 
     if (stateMotor2 == A1B1 && BValue == 0) {
-        upperArm.encoderAngle += 2 * PI / 600;
+        upperArm.encoderAngle += 2 * PI / 2400;
         stateMotor2 = A1B0;
     }
 
     else if (stateMotor2 == A1B0 && BValue == 1) {
-        upperArm.encoderAngle -= 2 * PI / 600;
+        upperArm.encoderAngle -= 2 * PI / 2400;
         stateMotor2 = A1B1;
     }
 
     else if (stateMotor1 == A0B1 && BValue == 0) {
-        upperArm.encoderAngle -= 2 * PI / 600;
+        upperArm.encoderAngle -= 2 * PI / 2400;
         stateMotor2 = A0B0;
     }
 
     else if (stateMotor1 == A0B0 && BValue == 1) {
-        upperArm.encoderAngle += 2 * PI / 600;
+        upperArm.encoderAngle += 2 * PI / 2400;
         stateMotor2 = A0B1;
     }
 }

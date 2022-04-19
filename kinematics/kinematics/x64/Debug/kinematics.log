@@ -1,0 +1,14 @@
+﻿  kinematics.c
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(46,39): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(47,39): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(91,75): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(95,45): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(97,46): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(67,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(68,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(76,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(133,33): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(134,33): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(135,46): warning C4305: 'function': truncation from 'double' to 'float'
+C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\kinematics\kinematics.c(139,11): warning C4013: 'system' undefined; assuming extern returning int
+  kinematics.vcxproj -> C:\Users\JoshuaTeng\Documents\GitHub\SCARA_software\kinematics\x64\Debug\kinematics.exe
